@@ -1,0 +1,2 @@
+import thermo
+thermo.main()
