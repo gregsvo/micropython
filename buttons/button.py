@@ -4,13 +4,13 @@ from machine import Pin
 
 CONFIG = {
     # WIFI Configuration
-    "SSID": 'gonzoguest',
-    "WIFI_PASSWORD": 'jigglybits',
+    "SSID": 'your_wifi_name_here', #change this
+    "WIFI_PASSWORD": 'your_wifi_password_here', #change this
     # MQTT Configuration
-    "MQTT_BROKER": b'm13.cloudmqtt.com',
-    "USER": b'greg',
-    "PASSWORD": b'greg',
-    "PORT": 19714,
+    "MQTT_BROKER": b'ip.address.of.raspberry.pi.broker.goes.here', #change this
+    "USER": b'username', #change this
+    "PASSWORD": b'password', #change this
+    "PORT": 1234, #change this
     "CLIENT_TYPE": b'button',
     "LAST_WILL_MESSAGE": b'OFFLINE',
     # unique identifier of the chip
