@@ -4,29 +4,26 @@ from machine import Pin
 
 CONFIG = {
     # WIFI Configuration
-    "SSID": 'WifiNameGoesHere',
-    "WIFI_PASSWORD": 'WifiPasswordGoesHere',
+    "SSID": 'wifi_name_goes_here',
+    "WIFI_PASSWORD": 'wifi_password_goes_here',
     # MQTT Configuration
-    "MQTT_BROKER": b'ip.of.broker.goes.here',
-    "USER": b'greg',
-    "PASSWORD": b'greg',
-    "PORT": 1883,
+    "MQTT_BROKER": b'ip.of.raspberry.pi.client.goes.here',
+    "USER": b'',
+    "PASSWORD": b'',
+    "PORT": 19714,
     "CLIENT_TYPE": b'button',
     "LAST_WILL_MESSAGE": b'OFFLINE',
     # unique identifier of the chip
     "CLIENT_ID": ubinascii.hexlify(machine.unique_id()),
 }
 
-base_topic = b'pyohio/' + CONFIG.get('USER') + b'/' + CONFIG.get('CLIENT_TYPE') + b'/' + CONFIG.get('CLIENT_ID') + b'/'
-
+base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_TYPE'), b'/', CONFIG.get('CLIENT_ID'), b'/'))
 
 def main():
     while True:
-        if wifi_connect():
-            client = mqtt_connect()
-            if client:
-                button(client)
-
+        wifi_connect()
+        client = mqtt_connect()
+        button(client)
 
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
@@ -37,8 +34,6 @@ def wifi_connect():
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
-    return True
-
 
 def mqtt_connect():
     print('connecting to mqtt broker...')
@@ -59,18 +54,19 @@ def mqtt_connect():
 
     return client
 
-
 def mqtt_publish_message(client, message, topic):
     # Connect to the broker
     try:
         client.connect()
         client.publish(topic, message)
-        time.sleep_ms(200)
         client.disconnect()
     except OSError:
         print("OSERROR - Resetting. My bad!")
         machine.reset()
 
+def send_button_value(client, message):
+    print("Sending this value to MQTT broker: {}".format(message))
+    mqtt_publish_message(client=client, message=str(message), topic=base_topic + b"value")
 
 def button(client):
     white_button = machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -101,7 +97,3 @@ def button(client):
             message = "BLUE"
         if message:
             send_button_value(client=client, message=message)
-
-def send_button_value(client, message):
-    print("Sending this value to MQTT broker: {}".format(message))
-    mqtt_publish_message(client=client, message=str(message), topic=base_topic + b"value")
