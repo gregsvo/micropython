@@ -14,9 +14,9 @@ CONFIG = {
     "SSID": 'WifiNameGoesHere',
     "WIFI_PASSWORD": 'WifiPasswordGoesHere',
     # MQTT Configuration
-    "MQTT_BROKER": b'ip.of.broker.goes.here',
-    "USER": b'greg',
-    "PASSWORD": b'greg',
+    "MQTT_BROKER": b'ip.address.of.raspberry.pi.broker.goes.here',
+    "USER": b'username',
+    "PASSWORD": b'password',
     "PORT": 1883,
     "CLIENT_TYPE": b'gauge',
     "LAST_WILL_MESSAGE": b'OFFLINE',
@@ -24,14 +24,14 @@ CONFIG = {
     "CLIENT_ID": ubinascii.hexlify(machine.unique_id()),
 }
 
-base_topic = b'pyohio/' + CONFIG.get('USER') + b'/' + CONFIG.get('CLIENT_TYPE') + b'/' + CONFIG.get('CLIENT_ID') + b'/'
+base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_TYPE'), b'/', CONFIG.get('CLIENT_ID'), b'/'))
 
 
 def main():
-    if wifi_connect():
+    while True:
+        wifi_connect():
         client = mqtt_connect()
-        if client:
-            wait_for_color_commands(client)
+        wait_for_color_commands(client)
 
 
 def wait_for_color_commands(client):
@@ -72,7 +72,6 @@ def wifi_connect():
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
-    return True
 
 
 def mqtt_connect():
@@ -107,7 +106,6 @@ def mqtt_publish_message(client, message, topic):
     try:
         client.connect()
         client.publish(topic, message)
-        time.sleep_ms(200)
         client.disconnect()
     except OSError:
         print("OSERROR - Resetting. My bad!")
