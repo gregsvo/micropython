@@ -20,10 +20,10 @@ base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_
 
 
 def main():
-	while True:
-		wifi_connect()
-		client = mqtt_connect()
-		thermo(client)
+    while True:
+        wifi_connect()
+        client = mqtt_connect()
+        thermo(client)
 
 
 def wifi_connect():
