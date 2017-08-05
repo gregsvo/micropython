@@ -4,12 +4,12 @@ from machine import Pin
 
 CONFIG = {
     # WIFI Configuration
-    "SSID": 'wifi_name_goes_here',
-    "WIFI_PASSWORD": 'wifi_password_goes_here',
+    "SSID": 'gonzoguest',
+    "WIFI_PASSWORD": 'jigglybits',
     # MQTT Configuration
-    "MQTT_BROKER": b'ip.of.raspberry.pi.client.goes.here',
-    "USER": b'',
-    "PASSWORD": b'',
+    "MQTT_BROKER": b'm13.cloudmqtt.com',
+    "USER": b'greg',
+    "PASSWORD": b'greg',
     "PORT": 19714,
     "CLIENT_TYPE": b'button',
     "LAST_WILL_MESSAGE": b'OFFLINE',
@@ -19,11 +19,13 @@ CONFIG = {
 
 base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_TYPE'), b'/', CONFIG.get('CLIENT_ID'), b'/'))
 
+
 def main():
     while True:
         wifi_connect()
         client = mqtt_connect()
         button(client)
+
 
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
@@ -34,6 +36,7 @@ def wifi_connect():
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
+
 
 def mqtt_connect():
     print('connecting to mqtt broker...')
@@ -54,6 +57,7 @@ def mqtt_connect():
 
     return client
 
+
 def mqtt_publish_message(client, message, topic):
     # Connect to the broker
     try:
@@ -64,9 +68,10 @@ def mqtt_publish_message(client, message, topic):
         print("OSERROR - Resetting. My bad!")
         machine.reset()
 
+
 def send_button_value(client, message):
-    print("Sending this value to MQTT broker: {}".format(message))
     mqtt_publish_message(client=client, message=str(message), topic=base_topic + b"value")
+
 
 def button(client):
     white_button = machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)
