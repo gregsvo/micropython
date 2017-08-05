@@ -9,9 +9,9 @@ CONFIG = {
     "SSID": 'WifiNameGoesHere',
     "WIFI_PASSWORD": 'WifiPasswordGoesHere',
     # MQTT Configuration
-    "MQTT_BROKER": b'ip.of.broker.goes.here',
-    "USER": b'greg',
-    "PASSWORD": b'greg',
+    "MQTT_BROKER": b'ip.address.of.raspberry.pi.broker.goes.here',
+    "USER": b'username',
+    "PASSWORD": b'password',
     "PORT": 1883,
     "CLIENT_TYPE": b'knob',
     "LAST_WILL_MESSAGE": b'OFFLINE',
@@ -19,27 +19,25 @@ CONFIG = {
     "CLIENT_ID": ubinascii.hexlify(machine.unique_id()),
 }
 
-base_topic = b'pyohio/' + CONFIG.get('USER') + b'/' + CONFIG.get('CLIENT_TYPE') + b'/' + CONFIG.get('CLIENT_ID') + b'/'
+base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_TYPE'), b'/', CONFIG.get('CLIENT_ID'), b'/'))
 
 
 def main():
-    time.sleep(1)
-    if wifi_connect():
+    while True:
+        wifi_connect():
         client = mqtt_connect()
-        if client:
-            knob(client)
+        knob(client)
 
 
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    while not wlan.isconnected():
+    if not wlan.isconnected():
         print('connecting to network...')
         wlan.connect(CONFIG.get('SSID'), CONFIG.get('WIFI_PASSWORD'))
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
-    return True
 
 
 def mqtt_connect():
@@ -66,13 +64,16 @@ def mqtt_publish_message(client, message, topic):
     # Connect to the broker
     try:
         client.connect()
+        print("Sending this value to MQTT broker: {}".format(message))
         client.publish(topic, message)
-        time.sleep_ms(200)
         client.disconnect()
     except OSError:
         print("OSERROR - Resetting. My bad!")
         machine.reset()
 
+
+def send_pot_value(client, message):
+    mqtt_publish_message(client=client, message=str(message), topic=base_topic + b"value")
 
 def knob(client):
     average_pot_value = 0
@@ -94,8 +95,3 @@ def knob(client):
             starttime = time.time()
         # slow it down, big fella! You're so fast your crashing! Time for a (quick) snooze.
         time.sleep_ms(10 - ((time.time() - starttime) % 10))
-
-
-def send_pot_value(client, message):
-    print("Sending this value to MQTT broker: {}".format(message))
-    mqtt_publish_message(client=client, message=str(message), topic=base_topic + b"value")
