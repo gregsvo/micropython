@@ -6,9 +6,9 @@ CONFIG = {
     "SSID": 'WifiNamegoesHere',
     "WIFI_PASSWORD": 'WifiPasswordGoesHere',
     # MQTT Configuration
-    "MQTT_BROKER": b'ip.of.broker.goes.here',
-    "USER": b'greg',
-    "PASSWORD": b'greg',
+    "MQTT_BROKER": b'ip.address.of.raspberry.pi.broker.goes.here',
+    "USER": b'username',
+    "PASSWORD": b'password',
     "PORT": 1883,
     "CLIENT_TYPE": b'thermo',
     "LAST_WILL_MESSAGE": b'OFFLINE',
@@ -16,26 +16,25 @@ CONFIG = {
     "CLIENT_ID": ubinascii.hexlify(machine.unique_id()),
 }
 
-base_topic = b'pyohio/' + CONFIG.get('USER') + b'/' + CONFIG.get('CLIENT_TYPE') + b'/' + CONFIG.get('CLIENT_ID') + b'/'
+base_topic = b''.join((b'pyohio/', CONFIG.get('USER'), b'/', CONFIG.get('CLIENT_TYPE'), b'/', CONFIG.get('CLIENT_ID'), b'/'))
+
 
 def main():
 	while True:
-		if wifi_connect():
-			client = mqtt_connect()
-			if client:
-				thermo(client)
+		wifi_connect()
+		client = mqtt_connect()
+		thermo(client)
 
 
 def wifi_connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    while not wlan.isconnected():
+    if not wlan.isconnected():
         print('connecting to network...')
         wlan.connect(CONFIG.get('SSID'), CONFIG.get('WIFI_PASSWORD'))
         while not wlan.isconnected():
             pass
     print('network config:', wlan.ifconfig())
-    return True
 
 
 def mqtt_connect():
@@ -57,12 +56,12 @@ def mqtt_connect():
 
     return client
 
+
 def mqtt_publish_message(client, message, topic):
 	# Connect to the broker
     try:
         client.connect()
         client.publish(topic, message)
-        time.sleep_ms(200)
         client.disconnect()
     except OSError:
         print("OSERROR - Resetting. My bad!")
@@ -74,7 +73,6 @@ def send_thermo_values(client, message_list):
 		topic = base_topic + message.get('topic')
 		message = message.get('data')
 		mqtt_publish_message(client=client, message=message, topic=topic)
-
 
 # create dht object
 def setup_DHT():
@@ -90,6 +88,7 @@ def setup_DS():
 	print('found devices:', roms_list)
 	return ds_object, roms_list
 
+
 def fetch_ds_data(ds_object, roms_list):
 	ds_object.convert_temp()
 	#DHT 22 can only be read every 2 seconds, 750ms for dat + 1250 for dht = 2 sec
@@ -98,12 +97,14 @@ def fetch_ds_data(ds_object, roms_list):
 		liquid_temperature = ds_object.read_temp(rom)
 	return liquid_temperature
 
+
 def fetch_dht_data(dht_object):
 	dht_object.measure()
 	air_temperature = dht_object.temperature()
 	air_humidity = dht_object.humidity()
 
 	return air_temperature, air_humidity
+
 
 def thermo(client):
 	dht_object = setup_DHT()
